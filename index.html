@@ -570,7 +570,9 @@
     let selectedLanguage = 'curl';
     let statusPollInterval = null;
 
-    const baseUrl = window.location.origin;
+    const baseUrl = window.location.origin.includes('vercel.app') 
+      ? 'https://fast-odds-backend.onrender.com' 
+      : window.location.origin;
 
     document.addEventListener('DOMContentLoaded', async () => {
       // Auto-authenticate default user session so switching to preview or refreshing never shows sign-in screen
