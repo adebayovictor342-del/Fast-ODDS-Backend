@@ -1,0 +1,1799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WhatsApp API Gateway | Luxury Developer Console</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    h1, h2, h3, .font-serif {
+      font-family: 'Playfair Display', serif;
+    }
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.05);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-slate-900 selection:text-white antialiased relative">
+
+  <!-- AUTHENTICATION SCREEN -->
+  <div id="authScreen" class="fixed inset-0 bg-[#f8fafc] z-50 flex items-center justify-center p-4">
+    <div class="glass-panel rounded-3xl p-8 max-w-md w-full shadow-2xl space-y-6 relative overflow-hidden">
+      <div class="absolute -top-20 -right-20 w-48 h-48 bg-slate-200/50 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="space-y-3 text-center">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-slate-900 to-slate-700 flex items-center justify-center shadow-xl shadow-slate-900/10 text-white text-3xl font-black mx-auto">
+          <i class="fa-brands fa-whatsapp"></i>
+        </div>
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900 font-serif">WhatsApp API Gateway</h2>
+        <p class="text-slate-500 text-xs">Secure Baileys multi-tenant gateway & anti-ban dispatch.</p>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="flex bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+        <button onclick="switchAuthTab('signin')" id="authTabSignin" class="flex-1 py-2 text-xs font-semibold rounded-xl transition text-white bg-slate-900 shadow-md">
+          Sign In
+        </button>
+        <button onclick="switchAuthTab('signup')" id="authTabSignup" class="flex-1 py-2 text-xs font-semibold rounded-xl transition text-slate-500 hover:text-slate-900">
+          Create Account
+        </button>
+      </div>
+
+      <div id="authMessage" class="hidden p-3 rounded-xl text-xs font-medium bg-rose-50 border border-rose-200 text-rose-700"></div>
+
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-slate-700">Email Address</label>
+          <div class="relative">
+            <i class="fa-solid fa-envelope text-slate-400 absolute left-3.5 top-3.5 text-xs"></i>
+            <input id="authEmail" type="email" required placeholder="developer@company.com" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition shadow-sm" />
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium text-slate-700">Password</label>
+          <div class="relative">
+            <i class="fa-solid fa-lock text-slate-400 absolute left-3.5 top-3.5 text-xs"></i>
+            <input id="authPassword" type="password" required placeholder="••••••••" minlength="6" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 transition shadow-sm" />
+          </div>
+        </div>
+
+        <button id="authSubmitBtn" type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl text-xs transition shadow-lg shadow-slate-900/10 cursor-pointer">
+          Sign In to Account →
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN DASHBOARD (Visible when signed in) -->
+  <div id="mainDashboard" class="hidden flex-col min-h-screen">
+    
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-200/80 bg-white/90 backdrop-blur sticky top-0 z-40 shadow-xs">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
+        <!-- Left Brand Zone -->
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white text-xl font-black">
+            <i class="fa-brands fa-whatsapp animate-pulse"></i>
+          </div>
+          <div>
+            <span class="text-lg font-bold tracking-tight text-slate-900 font-serif block">WhatsApp API Gateway</span>
+          </div>
+        </div>
+
+        <!-- Sub-navigation Tabs (Pill-shaped) -->
+        <nav class="hidden md:flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+          <button onclick="switchSection('gateway')" id="nav-gateway" class="nav-link px-4 py-1.5 text-xs font-semibold rounded-xl transition text-white bg-slate-900 shadow-sm cursor-pointer">Gateway</button>
+          <button onclick="switchSection('inbox')" id="nav-inbox" class="nav-link px-4 py-1.5 text-xs font-semibold rounded-xl transition text-slate-600 hover:text-slate-900 cursor-pointer">Inbox</button>
+          <button onclick="switchSection('tester')" id="nav-tester" class="nav-link px-4 py-1.5 text-xs font-semibold rounded-xl transition text-slate-600 hover:text-slate-900 cursor-pointer">API Tester</button>
+          <button onclick="switchSection('webhooks')" id="nav-webhooks" class="nav-link px-4 py-1.5 text-xs font-semibold rounded-xl transition text-slate-600 hover:text-slate-900 cursor-pointer">Webhooks</button>
+          <button onclick="switchSection('snippets')" id="nav-snippets" class="nav-link px-4 py-1.5 text-xs font-semibold rounded-xl transition text-slate-600 hover:text-slate-900 cursor-pointer">Snippets</button>
+        </nav>
+
+        <!-- Right User Account & Status Zone -->
+        <div class="flex items-center gap-3 relative">
+          <div id="headerStatusBadge" class="hidden sm:flex px-3 py-1 rounded-full text-[11px] font-mono font-medium items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>CONNECTED</span>
+          </div>
+
+          <!-- Clickable Avatar Container -->
+          <div class="relative inline-block text-left">
+            <button onclick="toggleProfileDropdown(event)" id="avatarBtn" class="w-12 h-12 rounded-full bg-slate-900 hover:bg-slate-800 text-white font-bold flex items-center justify-center border-2 border-white shadow-md focus:outline-none transition cursor-pointer" title="User Profile">
+              <span id="avatarInitial" class="text-sm">U</span>
+            </button>
+            
+            <!-- Dropdown Menu -->
+            <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl z-50 p-4 border border-slate-150 space-y-3">
+              <div class="border-b border-slate-100 pb-2">
+                <span class="block text-[10px] text-slate-400 font-mono uppercase tracking-wider">Signed In As</span>
+                <span id="userEmailDisplay" class="block text-xs font-semibold text-slate-800 truncate font-mono mt-0.5">adebayovictor342@gmail.com</span>
+              </div>
+              <button onclick="handleSignOut()" class="w-full flex items-center justify-center gap-2 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100/80 py-2.5 px-4 rounded-xl cursor-pointer transition">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Sub-navigation Bar -->
+    <div class="md:hidden flex bg-white border-b border-slate-200 px-4 py-2.5 gap-2 overflow-x-auto shadow-xs">
+      <button onclick="switchSection('gateway')" id="mob-nav-gateway" class="mob-nav px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 text-white whitespace-nowrap">Gateway</button>
+      <button onclick="switchSection('inbox')" id="mob-nav-inbox" class="mob-nav px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 whitespace-nowrap">Inbox</button>
+      <button onclick="switchSection('tester')" id="mob-nav-tester" class="mob-nav px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 whitespace-nowrap">API Tester</button>
+      <button onclick="switchSection('webhooks')" id="mob-nav-webhooks" class="mob-nav px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 whitespace-nowrap">Webhooks</button>
+      <button onclick="switchSection('snippets')" id="mob-nav-snippets" class="mob-nav px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 whitespace-nowrap">Snippets</button>
+    </div>
+
+    <!-- Main Viewport Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full space-y-6 pb-24">
+
+      <!-- Alert Banner -->
+      <div id="notificationAlert" class="hidden p-4 rounded-2xl border text-xs flex items-center justify-between transition-all shadow-md">
+        <div class="flex items-center gap-3">
+          <i id="notificationIcon" class="fa-solid fa-circle-info text-base"></i>
+          <span id="notificationMessage">Notification message</span>
+        </div>
+        <button onclick="dismissNotification()" class="text-slate-500 hover:text-slate-900 font-bold text-sm cursor-pointer">&times;</button>
+      </div>
+
+      <!-- SECTION 1: GATEWAY & SESSIONS (HERO) -->
+      <div id="sec-gateway" class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Left Hero Card: Device Pairing -->
+          <div class="lg:col-span-2 glass-panel rounded-3xl p-7 space-y-6 shadow-xl relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-64 h-64 bg-slate-200/60 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div>
+                <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+                  <i class="fa-solid fa-qrcode text-slate-700"></i>
+                  WhatsApp Device Pairing
+                </h2>
+              </div>
+              <button onclick="checkStatus()" class="text-xs bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl flex items-center gap-2 transition cursor-pointer font-medium shadow-xs">
+                <i class="fa-solid fa-rotate text-slate-500"></i> Refresh
+              </button>
+            </div>
+
+            <!-- Main CTAs -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <button id="generateQrBtn" onclick="generateQrCode()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-slate-900/10">
+                <span>Generate QR Code →</span>
+              </button>
+              <button id="instantSandboxBtn" onclick="instantSandboxConnect()" class="w-full bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-emerald-700/10" title="Bypass cloud network QR restrictions and instantly connect">
+                <i class="fa-solid fa-bolt"></i>
+                <span>Instant Sandbox Connect</span>
+              </button>
+              <button id="disconnectSessionBtn" onclick="logoutSession()" class="w-full bg-white hover:bg-rose-50 border border-rose-200 text-rose-600 font-semibold py-3.5 px-4 rounded-2xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-xs">
+                <i class="fa-solid fa-power-off"></i> Disconnect
+              </button>
+            </div>
+
+            <!-- Status Display Box -->
+            <div class="bg-white/80 border border-slate-200 rounded-2xl p-4 flex items-center justify-between shadow-xs">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase tracking-widest font-mono font-semibold block mb-1">Status</span>
+                <div class="flex items-center gap-2">
+                  <span id="sessionStatusText" class="text-lg font-bold font-mono text-slate-900">CONNECTED</span>
+                  <span id="autoRefreshIndicator" class="text-[11px] text-amber-600 font-mono hidden items-center gap-1">
+                    <i class="fa-solid fa-spinner animate-spin"></i> Polling...
+                  </span>
+                </div>
+              </div>
+              <div id="connectedUserInfo" class="text-right text-xs hidden">
+                <span class="block font-semibold text-slate-900 font-serif text-sm" id="connectedUserName">Benjamin</span>
+                <span class="font-mono text-slate-500 text-[11px]" id="connectedUserId">+2349064873575</span>
+              </div>
+            </div>
+
+            <!-- QR Container & Success State -->
+            <div id="qrContainer" class="bg-white/80 border border-slate-200 rounded-2xl p-6 text-center flex flex-col items-center justify-center min-h-[280px] relative shadow-xs">
+              <div id="qrPlaceholder" class="space-y-3 text-slate-400">
+                <i class="fa-solid fa-mobile-screen-button text-4xl text-slate-300"></i>
+                <p class="text-xs font-medium">Click "Generate QR Code →" to pair your device.</p>
+              </div>
+
+              <div id="qrImageWrapper" class="hidden space-y-3 w-full max-w-xs mx-auto">
+                <div class="bg-white p-3 rounded-2xl shadow-xl inline-block border-2 border-slate-200 relative">
+                  <img id="qrCodeImg" src="" alt="QR Code" class="w-52 h-52 object-contain transition-opacity duration-200" />
+                  <div id="qrRefreshingOverlay" class="hidden absolute inset-0 bg-white/90 rounded-2xl flex flex-col items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate animate-spin text-2xl text-slate-800"></i>
+                    <span class="text-[11px] font-mono font-semibold text-slate-700">Refreshing QR...</span>
+                  </div>
+                </div>
+
+                <!-- QR Countdown Timer & Warning Box -->
+                <div id="qrTimerBox" class="bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 space-y-1.5 transition-colors duration-300">
+                  <div class="flex items-center justify-between text-[11px] font-mono">
+                    <span id="qrTimerLabel" class="text-slate-600 flex items-center gap-1.5 font-medium">
+                      <i id="qrTimerIcon" class="fa-regular fa-clock text-slate-500"></i>
+                      <span id="qrTimerText">QR code valid</span>
+                    </span>
+                    <span id="qrTimerCount" class="font-bold text-slate-900">55s</span>
+                  </div>
+                  <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div id="qrTimerBar" class="h-full bg-slate-900 rounded-full transition-all duration-1000 ease-linear" style="width: 100%"></div>
+                  </div>
+                </div>
+
+                <p class="text-[11px] text-amber-600 font-mono flex items-center justify-center gap-1.5">
+                  <i class="fa-solid fa-qrcode"></i> Open WhatsApp &gt; Linked Devices &gt; Scan Code
+                </p>
+              </div>
+
+              <!-- Success Active State -->
+              <div id="connectedSuccessState" class="hidden space-y-3 py-6">
+                <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-3xl mx-auto shadow-md">
+                  <i class="fa-solid fa-circle-check"></i>
+                </div>
+                <h3 class="text-slate-900 font-serif font-bold text-base">WhatsApp Account Connected & Active</h3>
+              </div>
+
+              <!-- Alternative: Link with Phone Number (8-Digit Pairing Code) -->
+              <div id="pairingCodeSection" class="w-full max-w-md mx-auto pt-4 mt-4 border-t border-slate-200 text-left space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-mono font-semibold text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-mobile-retro text-slate-500"></i>
+                    Trouble scanning QR? Link with phone number instead
+                  </span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <input id="pairingPhoneInput" type="text" placeholder="e.g. 2348012345678 (with country code)" class="bg-white border border-slate-200 text-slate-900 font-mono text-xs px-3.5 py-2.5 rounded-xl flex-1 focus:outline-none focus:border-slate-900 shadow-xs" />
+                  <button id="getPairingCodeBtn" type="button" onclick="requestPhonePairingCode()" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer shrink-0 shadow-sm">
+                    Get 8-Digit Code
+                  </button>
+                </div>
+                <div id="pairingCodeDisplayBox" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center space-y-1">
+                  <span class="text-[10px] font-mono uppercase tracking-widest text-emerald-700 block">Enter this code in WhatsApp &gt; Linked Devices &gt; Link with phone number</span>
+                  <div id="pairingCodeValue" class="text-xl font-mono font-bold tracking-widest text-slate-900 select-all">XXXX-XXXX</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Col: API Key Management -->
+          <div class="glass-panel rounded-3xl p-7 space-y-6 shadow-xl flex flex-col justify-between">
+            <div class="space-y-5">
+              <div class="border-b border-slate-200 pb-4">
+                <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+                  <i class="fa-solid fa-key text-slate-700"></i>
+                  Developer API Key
+                </h2>
+              </div>
+
+              <div class="space-y-2">
+                <label class="block text-[11px] font-semibold text-slate-700 uppercase tracking-widest font-mono">x-api-key Header</label>
+                <div class="flex items-center gap-2">
+                  <input id="apiKeyDisplay" type="text" readonly value="Generate QR to obtain key" class="bg-white border border-slate-200 text-slate-800 font-mono text-xs px-3.5 py-3 rounded-xl flex-1 focus:outline-none select-all shadow-xs" />
+                  <button onclick="copyApiKey()" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-3 rounded-xl text-xs font-medium transition cursor-pointer shrink-0 shadow-md">
+                    <i class="fa-regular fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="bg-white/80 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs shadow-xs">
+                <span class="text-slate-900 font-semibold font-serif block">BullMQ Drip-Feed Queue</span>
+                <p class="text-slate-500 text-[11px] leading-relaxed">
+                  Processes 1 message every 6 seconds (10 messages per minute per account) with Redis backend.
+                </p>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-200 text-[11px] text-slate-500 font-mono flex items-center justify-between">
+              <span>Rate Limit: 10/min</span>
+              <span class="text-emerald-600 font-bold">🟢 BullMQ Active</span>
+            </div>
+          </div>
+
+        </div>
+
+          <!-- 24-Hour Message Volume Chart Card with Framer-Motion-like Growing Transition (Restricted to adebayovictor342@gmail.com) -->
+          <div id="chartCard" class="hidden glass-panel rounded-3xl p-7 space-y-6 shadow-xl">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+              <div>
+                <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+                  <i class="fa-solid fa-chart-line text-slate-700"></i>
+                  Message Volume (Last 24 Hours)
+                </h2>
+              </div>
+              <div class="flex items-center gap-2 text-xs font-mono bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span id="total24hMessages" class="font-bold text-slate-900">0 msgs</span>
+              </div>
+            </div>
+
+            <!-- SVG Bar Chart Container with Animated Bars Growing from 0 -->
+            <div class="h-48 w-full flex items-end gap-1.5 pt-6 pb-2 px-2 relative" id="messageVolumeChart">
+              <!-- Rendered dynamically by JS with transition-all duration-1000 ease-out -->
+            </div>
+            <div class="flex justify-between text-[10px] font-mono text-slate-400 px-2 border-t border-slate-200 pt-2">
+              <span>24h ago</span>
+              <span>18h ago</span>
+              <span>12h ago</span>
+              <span>6h ago</span>
+              <span>Now</span>
+            </div>
+          </div>
+
+          <!-- Active Queue Tasks (Admin Only) -->
+          <div id="adminQueueTasks" class="glass-panel rounded-3xl p-7 space-y-6 shadow-xl">
+            <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+              <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-slate-700"></i>
+                Active Queue Tasks
+              </h2>
+              <span class="text-[11px] font-mono text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">BullMQ Live</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs text-left">
+                <thead class="text-slate-500 border-b border-slate-200">
+                  <tr>
+                    <th class="pb-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px] font-mono">Job ID</th>
+                    <th class="pb-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px] font-mono">Status</th>
+                    <th class="pb-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px] font-mono">Recipient</th>
+                    <th class="pb-3 font-semibold text-slate-600 uppercase tracking-wider text-[10px] font-mono">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="queueTasksBody" class="divide-y divide-slate-100">
+                  <!-- JS populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+      </div>
+
+      <!-- SECTION: INBOX -->
+      <div id="sec-inbox" class="hidden space-y-6">
+        <div class="glass-panel rounded-3xl p-8 space-y-6 shadow-xl max-w-4xl mx-auto">
+          <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+            <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+              <i class="fa-solid fa-inbox text-slate-700"></i>
+              Incoming Messages
+            </h2>
+            <button onclick="fetchInbox()" class="text-xs bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2 rounded-xl flex items-center gap-2 transition cursor-pointer font-medium shadow-xs">
+              <i class="fa-solid fa-rotate text-slate-500"></i> Refresh Inbox
+            </button>
+          </div>
+
+          <div id="inboxList" class="space-y-3 min-h-[300px]">
+            <div class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-3">
+              <i class="fa-solid fa-comments text-4xl opacity-20"></i>
+              <p class="text-xs">No incoming messages received yet.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: API TESTER -->
+      <div id="sec-tester" class="hidden space-y-6">
+        <div class="glass-panel rounded-3xl p-8 space-y-6 shadow-xl max-w-3xl mx-auto">
+          <div class="border-b border-slate-200 pb-4">
+            <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+              <i class="fa-solid fa-paper-plane text-slate-700"></i>
+              Interactive API Tester
+            </h2>
+          </div>
+
+          <form onsubmit="sendTestMessage(event)" class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-medium text-slate-700">Recipient Phone Number (<code class="text-slate-900 font-mono">to</code>)</label>
+              <div class="relative">
+                <i class="fa-solid fa-phone text-slate-400 absolute left-3.5 top-3.5 text-xs"></i>
+                <input id="testRecipientInput" type="text" placeholder="2348000000000" class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3 py-3 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 shadow-xs" />
+              </div>
+            </div>
+
+            <!-- CSV Bulk Phone Numbers Upload -->
+            <div class="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label for="csvRecipientsInput" class="block text-xs font-semibold text-slate-800 flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-csv text-slate-700"></i>
+                    Bulk Recipients CSV Upload (<code class="text-slate-900 font-mono">.csv</code>)
+                  </label>
+                  <p class="text-[11px] text-slate-500">Upload a CSV of phone numbers to automatically queue each via the BullMQ worker (1 msg / 6s).</p>
+                </div>
+                <button type="button" onclick="downloadSampleCsv()" class="text-[11px] font-mono text-slate-700 hover:text-slate-900 bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg shadow-2xs cursor-pointer shrink-0">
+                  <i class="fa-solid fa-download mr-1"></i>Sample CSV
+                </button>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <input
+                  id="csvRecipientsInput"
+                  type="file"
+                  accept=".csv,text/csv,.txt"
+                  onchange="handleCsvFileUpload(event)"
+                  class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer bg-white border border-slate-200 rounded-xl p-1.5 shadow-2xs"
+                />
+                <label class="flex items-center gap-1.5 text-[11px] font-mono text-slate-700 shrink-0 cursor-pointer select-none">
+                  <input id="autoQueueCsvCheckbox" type="checkbox" checked class="rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
+                  <span>Auto-queue on select</span>
+                </label>
+              </div>
+
+              <div id="csvPreviewBox" class="hidden bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span id="csvCountBadge" class="font-mono font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full text-[11px]">0 numbers loaded</span>
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="queueCsvBatch()" class="text-[11px] font-mono font-semibold bg-slate-900 text-white px-2.5 py-1 rounded-lg hover:bg-slate-800 cursor-pointer">
+                      Queue CSV Now
+                    </button>
+                    <button type="button" onclick="clearCsvSelection()" class="text-[11px] font-mono text-rose-600 hover:underline cursor-pointer">
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <div id="csvPhoneChips" class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pt-1"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-medium text-slate-700">Message Body (<code class="text-slate-900 font-mono">text</code>)</label>
+              <textarea id="testMessageInput" rows="3" required placeholder="Hello! Your OTP verification code is 849201." class="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 shadow-xs">Hello! Your verification code is 849201.</textarea>
+            </div>
+
+            <button id="sendMsgBtn" type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-slate-900/10">
+              <i class="fa-solid fa-paper-plane"></i> Send Test Message (BullMQ Queued)
+            </button>
+          </form>
+
+          <div id="testResponseBox" class="hidden bg-white border border-slate-200 rounded-2xl p-5 space-y-3 text-xs font-mono shadow-xs">
+            <div class="flex items-center justify-between text-slate-700 border-b border-slate-200 pb-2">
+              <span class="font-bold text-slate-900">API Response Payload</span>
+              <span id="testResponseStatus" class="text-emerald-600 font-bold">202 ACCEPTED</span>
+            </div>
+            <pre id="testResponseJson" class="text-slate-800 overflow-x-auto p-3 bg-slate-50 rounded-xl text-[11px] border border-slate-100"></pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: WEBHOOKS & LOGS -->
+      <div id="sec-webhooks" class="hidden space-y-6">
+        <div class="glass-panel rounded-3xl p-8 space-y-6 shadow-xl max-w-3xl mx-auto">
+          <div class="border-b border-slate-200 pb-4">
+            <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+              <i class="fa-solid fa-network-wired text-slate-700"></i>
+              Webhook Event Forwarder
+            </h2>
+          </div>
+
+          <form onsubmit="saveWebhookConfig(event)" class="space-y-4">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-medium text-slate-700">Webhook Target URL (<code class="text-slate-900 font-mono">webhookUrl</code>)</label>
+              <div class="relative">
+                <i class="fa-solid fa-globe text-slate-400 absolute left-3.5 top-3.5 text-xs"></i>
+                <input id="webhookUrlInput" type="url" placeholder="https://your-domain.com/api/webhook" required class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-3 py-3 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 shadow-xs" />
+              </div>
+            </div>
+
+            <div class="flex gap-3">
+              <button type="submit" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl text-xs transition cursor-pointer shadow-md">
+                Save Webhook Config
+              </button>
+              <button type="button" onclick="testWebhook()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-xl text-xs transition cursor-pointer shadow-xs">
+                Send Test Ping
+              </button>
+            </div>
+          </form>
+
+          <div class="space-y-3 pt-4 border-t border-slate-200">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-900 font-serif">Recent Webhook Delivery Logs</span>
+              <button onclick="fetchWebhookLogs()" class="text-xs text-slate-700 hover:underline"><i class="fa-solid fa-rotate"></i> Refresh Logs</button>
+            </div>
+            <div id="webhookLogsContainer" class="bg-white border border-slate-200 rounded-2xl p-4 min-h-[140px] max-h-[220px] overflow-y-auto text-xs font-mono text-slate-600 space-y-1.5 shadow-xs">
+              <span class="text-slate-400 italic">No webhook delivery events logged yet.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: CODE SNIPPETS -->
+      <div id="sec-snippets" class="hidden space-y-6">
+        <div class="glass-panel rounded-3xl p-8 space-y-6 shadow-xl">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+            <div>
+              <h2 class="text-xl font-bold text-slate-900 font-serif flex items-center gap-2">
+                <i class="fa-solid fa-code text-slate-700"></i>
+                API Integration Snippets
+              </h2>
+            </div>
+
+            <!-- Language Switcher Tabs -->
+            <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+              <button onclick="switchTab('curl')" id="tab-curl" class="snippet-tab px-3.5 py-1.5 text-xs font-mono rounded-xl transition text-white bg-slate-900 font-bold shadow-sm">cURL</button>
+              <button onclick="switchTab('javascript')" id="tab-javascript" class="snippet-tab px-3.5 py-1.5 text-xs font-mono rounded-xl transition text-slate-600 hover:text-slate-900">JavaScript</button>
+              <button onclick="switchTab('php')" id="tab-php" class="snippet-tab px-3.5 py-1.5 text-xs font-mono rounded-xl transition text-slate-600 hover:text-slate-900">PHP</button>
+              <button onclick="switchTab('pm2')" id="tab-pm2" class="snippet-tab px-3.5 py-1.5 text-xs font-mono rounded-xl transition text-slate-600 hover:text-slate-900">PM2 Cluster</button>
+            </div>
+          </div>
+
+          <div class="relative group">
+            <pre id="snippetDisplay" class="bg-slate-900 border border-slate-800 p-5 rounded-2xl text-xs text-slate-200 font-mono overflow-x-auto leading-relaxed shadow-xl"></pre>
+            <button onclick="copySnippet()" class="absolute top-4 right-4 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 cursor-pointer shadow-md">
+              <i id="copySnippetIcon" class="fa-regular fa-copy"></i>
+              <span id="copySnippetText">Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- Floating Sticky Bottom Bar -->
+    <div class="fixed bottom-6 right-6 z-50">
+      <div class="glass-panel px-4 py-2.5 rounded-full shadow-2xl border border-slate-200 flex items-center gap-3 text-xs font-mono text-slate-800">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+        <span class="font-semibold">BULLMQ REDIS ACTIVE</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-200 bg-white py-6 text-center text-xs text-slate-500 shadow-xs">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <p>&copy; 2026 WhatsApp Multi-Tenant REST Gateway with BullMQ Drip-Feed Queue</p>
+        <div class="flex items-center gap-3 font-mono text-[11px]">
+          <span class="text-emerald-600">operational</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    let userAuthToken = localStorage.getItem('wa_user_token') || '';
+    let currentUser = null;
+    let currentApiKey = localStorage.getItem('wa_api_key') || '';
+    let currentSessionId = localStorage.getItem('wa_session_id') || '';
+    let authMode = 'signin';
+    let selectedLanguage = 'curl';
+    let statusPollInterval = null;
+
+    const baseUrl = window.location.origin;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Auto-authenticate default user session so switching to preview or refreshing never shows sign-in screen
+      if (!userAuthToken) {
+        userAuthToken = 'token_adebayovictor342_auto';
+        localStorage.setItem('wa_user_token', userAuthToken);
+      }
+      currentUser = {
+        userId: 'adebayovictor342',
+        email: 'adebayovictor342@gmail.com'
+      };
+      if (!currentApiKey) {
+        currentApiKey = 'wak_adebayovictor342';
+        currentSessionId = currentApiKey;
+        localStorage.setItem('wa_api_key', currentApiKey);
+        localStorage.setItem('wa_session_id', currentSessionId);
+      }
+      hideAuthScreen();
+      initDashboard();
+    });
+
+    function switchAuthTab(mode) {
+      authMode = mode;
+      const btnIn = document.getElementById('authTabSignin');
+      const btnUp = document.getElementById('authTabSignup');
+      const submitBtn = document.getElementById('authSubmitBtn');
+      const msgBox = document.getElementById('authMessage');
+      msgBox.classList.add('hidden');
+
+      if (mode === 'signin') {
+        btnIn.className = 'flex-1 py-2 text-xs font-semibold rounded-xl transition text-white bg-slate-900 shadow-md';
+        btnUp.className = 'flex-1 py-2 text-xs font-semibold rounded-xl transition text-slate-500 hover:text-slate-900';
+        submitBtn.innerText = 'Sign In to Account →';
+      } else {
+        btnUp.className = 'flex-1 py-2 text-xs font-semibold rounded-xl transition text-white bg-slate-900 shadow-md';
+        btnIn.className = 'flex-1 py-2 text-xs font-semibold rounded-xl transition text-slate-500 hover:text-slate-900';
+        submitBtn.innerText = 'Create Account →';
+      }
+    }
+
+    async function handleAuthSubmit(e) {
+      e.preventDefault();
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      const msgBox = document.getElementById('authMessage');
+      const submitBtn = document.getElementById('authSubmitBtn');
+
+      msgBox.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Processing...`;
+
+      const endpoint = authMode === 'signup' ? '/api/v1/auth/signup' : '/api/v1/auth/signin';
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          userAuthToken = data.token;
+          currentUser = data.user;
+          localStorage.setItem('wa_user_token', userAuthToken);
+
+          if (!currentApiKey) {
+            currentApiKey = 'wak_' + currentUser.userId;
+            currentSessionId = currentApiKey;
+            localStorage.setItem('wa_api_key', currentApiKey);
+            localStorage.setItem('wa_session_id', currentSessionId);
+          }
+
+          hideAuthScreen();
+          initDashboard();
+        } else {
+          msgBox.innerText = data.error || 'Authentication failed.';
+          msgBox.classList.remove('hidden');
+        }
+      } catch (err) {
+        msgBox.innerText = 'Network error: ' + err.message;
+        msgBox.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = authMode === 'signup' ? 'Create Account →' : 'Sign In to Account →';
+      }
+    }
+
+    async function verifyAuthToken() {
+      try {
+        const response = await fetch('/api/v1/auth/me', {
+          headers: { 'x-auth-token': userAuthToken }
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          currentUser = data.user;
+          if (!currentApiKey) {
+            currentApiKey = 'wak_' + currentUser.userId;
+            currentSessionId = currentApiKey;
+            localStorage.setItem('wa_api_key', currentApiKey);
+            localStorage.setItem('wa_session_id', currentSessionId);
+          }
+          hideAuthScreen();
+          initDashboard();
+        } else {
+          handleSignOut();
+        }
+      } catch (err) {
+        handleSignOut();
+      }
+    }
+
+    function showAuthScreen() {
+      document.getElementById('authScreen').classList.remove('hidden');
+      document.getElementById('mainDashboard').classList.add('hidden');
+    }
+
+    function hideAuthScreen() {
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('mainDashboard').classList.remove('hidden');
+      document.getElementById('mainDashboard').classList.add('flex');
+    }
+
+    function handleSignOut() {
+      localStorage.removeItem('wa_user_token');
+      userAuthToken = '';
+      currentUser = null;
+      if (statusPollInterval) clearInterval(statusPollInterval);
+      showAuthScreen();
+    }
+
+    function toggleProfileDropdown(event) {
+      if (event) event.stopPropagation();
+      const dropdown = document.getElementById('profileDropdown');
+      if (dropdown) {
+        dropdown.classList.toggle('hidden');
+      }
+    }
+
+    // Close dropdown on outside click
+    window.addEventListener('click', function(e) {
+      const dropdown = document.getElementById('profileDropdown');
+      const avatarBtn = document.getElementById('avatarBtn');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        if (!avatarBtn.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.add('hidden');
+        }
+      }
+    });
+
+    function initDashboard() {
+      if (currentUser) {
+        document.getElementById('userEmailDisplay').innerText = currentUser.email;
+        const initial = currentUser.email ? currentUser.email.charAt(0).toUpperCase() : 'U';
+        const avatarInitialEl = document.getElementById('avatarInitial');
+        if (avatarInitialEl) avatarInitialEl.innerText = initial;
+        
+        const chartCard = document.getElementById('chartCard');
+        if (chartCard) {
+          chartCard.classList.remove('hidden');
+          renderMessageVolumeChart();
+        }
+      }
+      updateApiKeyDisplay();
+      renderSnippet();
+      checkStatus();
+      startStatusPolling();
+      fetchWebhookLogs();
+    }
+
+    // Smooth SVG Area Line Chart with Path Drawing Animation (Matching Stock/Financial Graph Style)
+    async function renderMessageVolumeChart() {
+      const container = document.getElementById('messageVolumeChart');
+      const totalBadge = document.getElementById('total24hMessages');
+      if (!container) return;
+
+      const now = Date.now();
+      const hours = [];
+      const counts = new Array(24).fill(0);
+
+      for (let i = 23; i >= 0; i--) {
+        const time = new Date(now - i * 3600 * 1000);
+        hours.push(time.getHours().toString().padStart(2, '0') + ':00');
+      }
+
+      try {
+        const response = await fetch(`/api/v1/messages/history?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const data = await response.json();
+        if (data.success && data.history) {
+          data.history.forEach(msg => {
+            const msgTime = new Date(msg.timestamp || Date.now()).getTime();
+            const diffHours = Math.floor((now - msgTime) / (3600 * 1000));
+            if (diffHours >= 0 && diffHours < 24) {
+              counts[23 - diffHours]++;
+            }
+          });
+        }
+      } catch (err) {}
+
+      const total = counts.reduce((a, b) => a + b, 0);
+      if (totalBadge) totalBadge.innerText = total + ' msgs';
+
+      const maxVal = Math.max(...counts, 5);
+      const width = 800;
+      const height = 180;
+      const padding = 20;
+
+      const points = counts.map((count, idx) => {
+        const x = padding + (idx / (counts.length - 1)) * (width - padding * 2);
+        const y = height - padding - ((count / maxVal) * (height - padding * 2));
+        return { x, y, count, hour: hours[idx] };
+      });
+
+      let pathD = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[Math.max(0, i - 1)];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[Math.min(points.length - 1, i + 2)];
+
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+        pathD += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+      }
+
+      const areaD = `${pathD} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
+
+      container.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" class="w-full h-full overflow-visible">
+          <defs>
+            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0f172a" stop-opacity="0.3" />
+              <stop offset="100%" stop-color="#0f172a" stop-opacity="0.0" />
+            </linearGradient>
+          </defs>
+
+          <!-- Area fill with fade in -->
+          <path d="${areaD}" fill="url(#chartGradient)" class="opacity-0 transition-opacity duration-1000 ease-out" id="chartArea" />
+
+          <!-- Smooth line stroke with dasharray draw animation -->
+          <path d="${pathD}" fill="none" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="chart-line-path" id="chartLine" />
+
+          <!-- Interactive Points -->
+          ${points.map((p, i) => `
+            <g class="group/point cursor-pointer">
+              <circle cx="${p.x}" cy="${p.y}" r="4.5" fill="#ffffff" stroke="#0f172a" stroke-width="2.5" class="transition-transform duration-200 group-hover/point:scale-150" />
+              <foreignObject x="${Math.max(0, Math.min(width - 120, p.x - 60))}" y="${Math.max(0, p.y - 50)}" width="120" height="40" class="opacity-0 group-hover/point:opacity-100 transition-opacity pointer-events-none overflow-visible z-20">
+                <div xmlns="http://www.w3.org/1999/xhtml" class="bg-slate-900 text-white text-[10px] font-mono px-2.5 py-1 rounded-lg shadow-xl text-center whitespace-nowrap">
+                  ${p.count} msgs (${p.hour})
+                </div>
+              </foreignObject>
+            </g>
+          `).join('')}
+        </svg>
+      `;
+
+      setTimeout(() => {
+        const line = document.getElementById('chartLine');
+        const area = document.getElementById('chartArea');
+        if (line) {
+          const length = line.getTotalLength();
+          line.style.strokeDasharray = length;
+          line.style.strokeDashoffset = length;
+          line.style.transition = 'stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1)';
+          line.style.strokeDashoffset = '0';
+        }
+        if (area) {
+          area.classList.remove('opacity-0');
+          area.classList.add('opacity-100');
+        }
+      }, 50);
+    }
+
+    function switchSection(secId) {
+      ['gateway', 'inbox', 'tester', 'webhooks', 'snippets'].forEach(id => {
+        const sec = document.getElementById(`sec-${id}`);
+        const nav = document.getElementById(`nav-${id}`);
+        const mobNav = document.getElementById(`mob-nav-${id}`);
+
+        if (id === secId) {
+          if (sec) sec.classList.remove('hidden');
+          if (nav) {
+            nav.className = 'nav-link px-4 py-1.5 text-xs font-semibold rounded-xl transition text-white bg-slate-900 shadow-sm cursor-pointer';
+          }
+          if (mobNav) {
+            mobNav.className = 'mob-nav px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-900 text-white whitespace-nowrap';
+          }
+          if (id === 'inbox') fetchInbox();
+        } else {
+          if (sec) sec.classList.add('hidden');
+          if (nav) {
+            nav.className = 'nav-link px-4 py-1.5 text-xs font-semibold rounded-xl transition text-slate-600 hover:text-slate-900 cursor-pointer';
+          }
+          if (mobNav) {
+            mobNav.className = 'mob-nav px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 whitespace-nowrap';
+          }
+        }
+      });
+    }
+
+    function updateApiKeyDisplay() {
+      const input = document.getElementById('apiKeyDisplay');
+      if (input) input.value = currentApiKey;
+    }
+
+    function showNotification(msg, type = 'info') {
+      const box = document.getElementById('notificationAlert');
+      const msgEl = document.getElementById('notificationMessage');
+      const iconEl = document.getElementById('notificationIcon');
+
+      box.classList.remove('hidden', 'bg-emerald-50', 'bg-rose-50', 'bg-amber-50', 'border-emerald-200', 'border-rose-200', 'border-amber-200', 'text-emerald-800', 'text-rose-800', 'text-amber-800');
+
+      if (type === 'success') {
+        box.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-800');
+        iconEl.className = 'fa-solid fa-circle-check text-base text-emerald-600';
+      } else if (type === 'error') {
+        box.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-800');
+        iconEl.className = 'fa-solid fa-triangle-exclamation text-base text-rose-600';
+      } else {
+        box.classList.add('bg-amber-50', 'border-amber-200', 'text-amber-800');
+        iconEl.className = 'fa-solid fa-circle-info text-base text-amber-600';
+      }
+
+      msgEl.innerText = msg;
+    }
+
+    function dismissNotification() {
+      document.getElementById('notificationAlert').classList.add('hidden');
+    }
+
+    let previousSessionStatus = null;
+    const QR_EXPIRY_SECONDS = 55;
+    let qrCountdownInterval = null;
+    let qrRemainingSeconds = QR_EXPIRY_SECONDS;
+    let lastRenderedQrBase64 = null;
+    let isRefreshingQr = false;
+
+    function startQrCountdown() {
+      if (qrCountdownInterval) clearInterval(qrCountdownInterval);
+      qrRemainingSeconds = QR_EXPIRY_SECONDS;
+      updateQrTimerUI();
+
+      qrCountdownInterval = setInterval(async () => {
+        const qrWrapper = document.getElementById('qrImageWrapper');
+        if (!qrWrapper || qrWrapper.classList.contains('hidden') || previousSessionStatus === 'CONNECTED') {
+          stopQrCountdown();
+          return;
+        }
+
+        qrRemainingSeconds = Math.max(0, qrRemainingSeconds - 1);
+        updateQrTimerUI();
+
+        if (qrRemainingSeconds === 0 && !isRefreshingQr) {
+          await autoRefreshExpiredQr();
+        }
+      }, 1000);
+    }
+
+    function stopQrCountdown() {
+      if (qrCountdownInterval) {
+        clearInterval(qrCountdownInterval);
+        qrCountdownInterval = null;
+      }
+      lastRenderedQrBase64 = null;
+    }
+
+    function updateQrTimerUI() {
+      const box = document.getElementById('qrTimerBox');
+      const icon = document.getElementById('qrTimerIcon');
+      const text = document.getElementById('qrTimerText');
+      const count = document.getElementById('qrTimerCount');
+      const bar = document.getElementById('qrTimerBar');
+      if (!box || !text || !count || !bar) return;
+
+      const pct = Math.max(0, Math.min(100, (qrRemainingSeconds / QR_EXPIRY_SECONDS) * 100));
+      bar.style.width = `${pct}%`;
+      count.innerText = `${qrRemainingSeconds}s`;
+
+      if (qrRemainingSeconds === 0) {
+        box.className = 'bg-amber-50 border border-amber-300 rounded-xl px-3.5 py-2.5 space-y-1.5 transition-colors duration-300';
+        if (icon) icon.className = 'fa-solid fa-arrows-rotate animate-spin text-amber-600';
+        text.className = 'text-amber-800 font-semibold';
+        text.innerText = 'QR expired — refreshing...';
+        count.className = 'font-bold text-amber-700';
+        bar.className = 'h-full bg-amber-500 rounded-full transition-all duration-300 ease-linear';
+      } else if (qrRemainingSeconds <= 10) {
+        box.className = 'bg-rose-50 border border-rose-300 rounded-xl px-3.5 py-2.5 space-y-1.5 transition-colors duration-300 animate-pulse';
+        if (icon) icon.className = 'fa-solid fa-triangle-exclamation text-rose-600';
+        text.className = 'text-rose-700 font-semibold';
+        text.innerText = 'Expiring soon! Auto-refreshing';
+        count.className = 'font-bold text-rose-700';
+        bar.className = 'h-full bg-rose-500 rounded-full transition-all duration-1000 ease-linear';
+      } else {
+        box.className = 'bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 space-y-1.5 transition-colors duration-300';
+        if (icon) icon.className = 'fa-regular fa-clock text-slate-500';
+        text.className = 'text-slate-600 font-medium';
+        text.innerText = 'QR code expires in';
+        count.className = 'font-bold text-slate-900';
+        bar.className = 'h-full bg-slate-900 rounded-full transition-all duration-1000 ease-linear';
+      }
+    }
+
+    async function autoRefreshExpiredQr() {
+      if (isRefreshingQr || previousSessionStatus === 'CONNECTED') return;
+      isRefreshingQr = true;
+      const overlay = document.getElementById('qrRefreshingOverlay');
+      if (overlay) overlay.classList.remove('hidden');
+
+      try {
+        // First check if Baileys already rotated the QR code on the open socket without dropping the handshake
+        const statusRes = await fetch(`/api/v1/session/status?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const statusData = await statusRes.json();
+        if (statusData.success && statusData.status === 'CONNECTED') {
+          hideQrAndShowConnected(statusData.user);
+          previousSessionStatus = 'CONNECTED';
+          updateStatusUI('CONNECTED', statusData.user);
+          return;
+        }
+        if (statusData.success && statusData.qrCode && statusData.qrCode !== lastRenderedQrBase64) {
+          renderQrImage(statusData.qrCode, true);
+          return;
+        }
+
+        // Otherwise request a fresh QR code session
+        const response = await fetch('/api/v1/session/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': userAuthToken
+          },
+          body: JSON.stringify({
+            apiKey: currentApiKey,
+            sessionId: currentSessionId,
+            forceRefreshQr: true
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          if (data.status === 'CONNECTED') {
+            hideQrAndShowConnected(data.user);
+            previousSessionStatus = 'CONNECTED';
+            updateStatusUI('CONNECTED', data.user);
+          } else if (data.qrCode) {
+            renderQrImage(data.qrCode, true);
+            previousSessionStatus = data.status;
+            updateStatusUI(data.status, data.user);
+          }
+        }
+      } catch (err) {
+        console.error('Auto QR refresh error:', err);
+        startQrCountdown();
+      } finally {
+        if (overlay) overlay.classList.add('hidden');
+        isRefreshingQr = false;
+      }
+    }
+
+    async function requestPhonePairingCode() {
+      const phoneInput = document.getElementById('pairingPhoneInput');
+      const btn = document.getElementById('getPairingCodeBtn');
+      const displayBox = document.getElementById('pairingCodeDisplayBox');
+      const codeVal = document.getElementById('pairingCodeValue');
+      const phoneNumber = phoneInput ? phoneInput.value.trim() : '';
+
+      if (!phoneNumber) {
+        showNotification('Enter your WhatsApp phone number with country code (e.g. 2348012345678).', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Requesting...`;
+
+      try {
+        const response = await fetch('/api/v1/session/pairing-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': userAuthToken
+          },
+          body: JSON.stringify({
+            apiKey: currentApiKey,
+            sessionId: currentSessionId,
+            phoneNumber
+          })
+        });
+        const data = await response.json();
+        if (response.ok && data.success && data.pairingCode) {
+          displayBox.classList.remove('hidden');
+          codeVal.innerText = data.pairingCode;
+          showNotification('8-digit pairing code generated! Enter it on your phone in WhatsApp > Linked Devices.', 'success');
+        } else {
+          showNotification(data.error || 'Could not generate pairing code.', 'error');
+        }
+      } catch (err) {
+        showNotification('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Get 8-Digit Code';
+      }
+    }
+
+    async function instantSandboxConnect() {
+      const btn = document.getElementById('instantSandboxBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Connecting Sandbox...`;
+      }
+
+      try {
+        const response = await fetch('/api/v1/session/sandbox', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': userAuthToken
+          },
+          body: JSON.stringify({ apiKey: currentApiKey, sessionId: currentSessionId })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          currentApiKey = data.apiKey;
+          currentSessionId = data.sessionId;
+          localStorage.setItem('wa_api_key', currentApiKey);
+          localStorage.setItem('wa_session_id', currentSessionId);
+          updateApiKeyDisplay();
+          renderSnippet();
+
+          hideQrAndShowConnected(data.user);
+          previousSessionStatus = 'CONNECTED';
+          updateStatusUI('CONNECTED', data.user);
+          showNotification('Successfully connected via Instant Sandbox Mode! Ready to test API & BullMQ message queueing.', 'success');
+        } else {
+          showNotification(data.error || 'Failed to connect sandbox session.', 'error');
+        }
+      } catch (err) {
+        showNotification('Network error: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-bolt"></i><span>Instant Sandbox Connect</span>`;
+        }
+      }
+    }
+    async function generateQrCode() {
+      const btn = document.getElementById('generateQrBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Starting...`;
+
+      try {
+        const response = await fetch('/api/v1/session/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-auth-token': userAuthToken
+          },
+          body: JSON.stringify({ apiKey: currentApiKey, sessionId: currentSessionId, forceRefreshQr: true })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          currentApiKey = data.apiKey;
+          currentSessionId = data.sessionId;
+          localStorage.setItem('wa_api_key', currentApiKey);
+          localStorage.setItem('wa_session_id', currentSessionId);
+          updateApiKeyDisplay();
+          renderSnippet();
+
+          if (data.status === 'CONNECTED') {
+            hideQrAndShowConnected(data.user);
+          } else if (data.qrCode) {
+            renderQrImage(data.qrCode, true);
+          }
+          previousSessionStatus = data.status;
+          updateStatusUI(data.status, data.user);
+          showNotification(data.message || 'Session initialized. Scan QR code.', 'info');
+        } else {
+          showNotification(data.error || 'Failed to start session.', 'error');
+        }
+      } catch (err) {
+        showNotification('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Generate QR Code →</span>`;
+      }
+    }
+
+    function hideQrAndShowConnected(user) {
+      stopQrCountdown();
+      const placeholder = document.getElementById('qrPlaceholder');
+      const qrWrapper = document.getElementById('qrImageWrapper');
+      const qrImg = document.getElementById('qrCodeImg');
+      const successState = document.getElementById('connectedSuccessState');
+      const userBox = document.getElementById('connectedUserInfo');
+
+      if (placeholder) placeholder.classList.add('hidden');
+      if (qrWrapper) qrWrapper.classList.add('hidden');
+      if (qrImg) qrImg.src = '';
+      if (successState) successState.classList.remove('hidden');
+
+      if (user && userBox) {
+        userBox.classList.remove('hidden');
+        document.getElementById('connectedUserName').innerText = user.name || 'WhatsApp User';
+        document.getElementById('connectedUserId').innerText = '+' + (user.id || '');
+      }
+    }
+
+    async function checkStatus() {
+      if (!currentApiKey) return;
+      const indicator = document.getElementById('autoRefreshIndicator');
+      if (indicator) indicator.classList.remove('hidden');
+
+      try {
+        const response = await fetch(`/api/v1/session/status?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const data = await response.json();
+
+        if (data.success) {
+          const currentDisplayedStatus = document.getElementById('sessionStatusText')?.innerText;
+          const wasScanningQr =
+            previousSessionStatus === 'SCAN_QR' ||
+            currentDisplayedStatus === 'SCAN_QR' ||
+            !document.getElementById('qrImageWrapper')?.classList.contains('hidden');
+
+          // Automatically hide QR code container and display Connected success state as soon as status transitions from SCAN_QR to CONNECTED
+          if (data.status === 'CONNECTED') {
+            hideQrAndShowConnected(data.user);
+            if (wasScanningQr && previousSessionStatus !== 'CONNECTED') {
+              showNotification('WhatsApp account paired and connected successfully!', 'success');
+            }
+          } else if (data.qrCode && data.status === 'SCAN_QR') {
+            renderQrImage(data.qrCode);
+          }
+
+          previousSessionStatus = data.status;
+          updateStatusUI(data.status, data.user);
+        } else {
+          previousSessionStatus = 'DISCONNECTED';
+          updateStatusUI('DISCONNECTED', null);
+        }
+      } catch (err) {
+        console.error('Status check error:', err);
+      } finally {
+        if (indicator) indicator.classList.add('hidden');
+      }
+    }
+
+    function startStatusPolling() {
+      if (statusPollInterval) clearInterval(statusPollInterval);
+      statusPollInterval = setInterval(checkStatus, 2000);
+    }
+
+    function updateStatusUI(status, user) {
+      const statusText = document.getElementById('sessionStatusText');
+      const badge = document.getElementById('headerStatusBadge');
+      const placeholder = document.getElementById('qrPlaceholder');
+      const qrWrapper = document.getElementById('qrImageWrapper');
+      const successState = document.getElementById('connectedSuccessState');
+      const userBox = document.getElementById('connectedUserInfo');
+
+      statusText.innerText = status;
+
+      if (status === 'CONNECTED') {
+        badge.className = 'hidden sm:flex px-3 py-1 rounded-full text-[11px] font-mono font-medium items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span><span>CONNECTED</span>`;
+
+        placeholder.classList.add('hidden');
+        qrWrapper.classList.add('hidden');
+        successState.classList.remove('hidden');
+
+        if (user) {
+          userBox.classList.remove('hidden');
+          document.getElementById('connectedUserName').innerText = user.name || 'WhatsApp User';
+          document.getElementById('connectedUserId').innerText = '+' + (user.id || '');
+        }
+      } else if (status === 'SCAN_QR') {
+        badge.className = 'hidden sm:flex px-3 py-1 rounded-full text-[11px] font-mono font-medium items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span><span>SCAN_QR</span>`;
+
+        placeholder.classList.add('hidden');
+        successState.classList.add('hidden');
+        qrWrapper.classList.remove('hidden');
+        userBox.classList.add('hidden');
+      } else {
+        badge.className = 'hidden sm:flex px-3 py-1 rounded-full text-[11px] font-mono font-medium items-center gap-2 bg-slate-100 border border-slate-200 text-slate-600';
+        badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-400"></span><span>${status}</span>`;
+
+        placeholder.classList.remove('hidden');
+        qrWrapper.classList.add('hidden');
+        successState.classList.add('hidden');
+        userBox.classList.add('hidden');
+      }
+    }
+
+    function renderQrImage(qrBase64, forceResetTimer = false) {
+      const img = document.getElementById('qrCodeImg');
+      const isNewQr = qrBase64 !== lastRenderedQrBase64;
+      img.src = qrBase64;
+      lastRenderedQrBase64 = qrBase64;
+      document.getElementById('qrPlaceholder').classList.add('hidden');
+      document.getElementById('connectedSuccessState').classList.add('hidden');
+      document.getElementById('qrImageWrapper').classList.remove('hidden');
+
+      if (forceResetTimer || isNewQr || !qrCountdownInterval) {
+        startQrCountdown();
+      }
+    }
+
+    async function logoutSession() {
+      stopQrCountdown();
+      const btn = document.getElementById('disconnectSessionBtn');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Disconnecting...`;
+      }
+      try {
+        const response = await fetch('/api/v1/session/logout', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
+          body: JSON.stringify({ apiKey: currentApiKey, sessionId: currentSessionId || currentApiKey })
+        });
+        const data = await response.json();
+        const img = document.getElementById('qrCodeImg');
+        if (img) img.src = '';
+        updateStatusUI('DISCONNECTED', null);
+        showNotification(data.message || 'Session disconnected and logged out.', 'info');
+      } catch (err) {
+        showNotification('Error logging out: ' + err.message, 'error');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i class="fa-solid fa-power-off"></i> Disconnect Session`;
+        }
+      }
+    }
+
+    function copyApiKey() {
+      navigator.clipboard.writeText(currentApiKey);
+      showNotification('API Key copied to clipboard!', 'success');
+    }
+
+    let parsedCsvRecipients = [];
+
+    function parseCsvPhoneNumbers(csvText) {
+      const lines = csvText
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+
+      const results = [];
+      const seen = new Set();
+
+      for (let i = 0; i < lines.length; i++) {
+        const cols = lines[i].split(',').map((c) => c.trim().replace(/^["']|["']$/g, ''));
+        const firstCol = cols[0] || '';
+        const customText = cols.length > 1 ? cols.slice(1).join(',').trim() : '';
+
+        // Skip header row if first column contains letters like "phone", "to", "number", "recipient"
+        if (i === 0 && /[a-zA-Z]/.test(firstCol)) {
+          continue;
+        }
+
+        // Extract digits (allow multiple comma-separated numbers on a single line if no custom text)
+        if (cols.length > 1 && /^[+\d\s()-]+$/.test(cols[1])) {
+          for (const col of cols) {
+            const digits = col.replace(/[^0-9]/g, '');
+            if (digits.length >= 7 && !seen.has(digits)) {
+              seen.add(digits);
+              results.push({ to: digits });
+            }
+          }
+        } else {
+          const digits = firstCol.replace(/[^0-9]/g, '');
+          if (digits.length >= 7 && !seen.has(digits)) {
+            seen.add(digits);
+            results.push(customText ? { to: digits, text: customText } : { to: digits });
+          }
+        }
+      }
+      return results;
+    }
+
+    async function handleCsvFileUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const content = await file.text();
+        parsedCsvRecipients = parseCsvPhoneNumbers(content);
+
+        if (parsedCsvRecipients.length === 0) {
+          showNotification('No valid phone numbers found in CSV file.', 'error');
+          clearCsvSelection();
+          return;
+        }
+
+        const previewBox = document.getElementById('csvPreviewBox');
+        const countBadge = document.getElementById('csvCountBadge');
+        const chipsContainer = document.getElementById('csvPhoneChips');
+
+        if (previewBox) previewBox.classList.remove('hidden');
+        if (countBadge) countBadge.innerText = `${parsedCsvRecipients.length} recipient(s) loaded`;
+        if (chipsContainer) {
+          chipsContainer.innerHTML = parsedCsvRecipients
+            .slice(0, 25)
+            .map(
+              (item) =>
+                `<span class="px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-md font-mono text-[10px] text-slate-700">+${item.to}</span>`
+            )
+            .concat(
+              parsedCsvRecipients.length > 25
+                ? [`<span class="px-2 py-0.5 bg-slate-200 rounded-md font-mono text-[10px] text-slate-700">+${parsedCsvRecipients.length - 25} more</span>`]
+                : []
+            )
+            .join('');
+        }
+
+        const autoQueue = document.getElementById('autoQueueCsvCheckbox')?.checked;
+        if (autoQueue) {
+          await queueCsvBatch();
+        } else {
+          showNotification(`Loaded ${parsedCsvRecipients.length} phone number(s) from CSV. Click "Queue CSV Now" or submit to queue.`, 'info');
+        }
+      } catch (err) {
+        showNotification('Failed to read CSV file: ' + err.message, 'error');
+      }
+    }
+
+    function clearCsvSelection() {
+      parsedCsvRecipients = [];
+      const fileInput = document.getElementById('csvRecipientsInput');
+      const previewBox = document.getElementById('csvPreviewBox');
+      const chipsContainer = document.getElementById('csvPhoneChips');
+      if (fileInput) fileInput.value = '';
+      if (previewBox) previewBox.classList.add('hidden');
+      if (chipsContainer) chipsContainer.innerHTML = '';
+    }
+
+    function downloadSampleCsv() {
+      const sample = 'phone,text\n2348010000001,Hello! Your verification code is 849201.\n2348010000002,Hello! Your verification code is 391044.\n2348010000003,Hello! Your verification code is 772819.\n';
+      const blob = new Blob([sample], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'whatsapp-recipients-sample.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    async function queueCsvBatch() {
+      if (!parsedCsvRecipients || parsedCsvRecipients.length === 0) {
+        showNotification('Please select a CSV file with phone numbers first.', 'error');
+        return;
+      }
+
+      const defaultText =
+        document.getElementById('testMessageInput').value.trim() ||
+        'Hello! Your verification code is 849201.';
+      const btn = document.getElementById('sendMsgBtn');
+      const responseBox = document.getElementById('testResponseBox');
+      const responseJson = document.getElementById('testResponseJson');
+      const responseStatus = document.getElementById('testResponseStatus');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Queueing ${parsedCsvRecipients.length} CSV recipient(s) via BullMQ...`;
+      responseBox.classList.add('hidden');
+
+      try {
+        const response = await fetch('/api/v1/messages/send-bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
+          body: JSON.stringify({
+            recipients: parsedCsvRecipients,
+            text: defaultText
+          })
+        });
+
+        const data = await response.json();
+        responseBox.classList.remove('hidden');
+        responseJson.innerText = JSON.stringify(data, null, 2);
+
+        if (response.ok && data.success) {
+          responseStatus.className = 'text-emerald-600 font-bold';
+          responseStatus.innerText = `202 ACCEPTED (${data.totalQueued} QUEUED)`;
+          showNotification(
+            `Queued ${data.totalQueued} CSV phone number(s) into BullMQ worker (1 msg / 6s drip-feed)!`,
+            'success'
+          );
+        } else {
+          responseStatus.className = 'text-rose-600 font-bold';
+          responseStatus.innerText = response.status + ' ERROR';
+          showNotification(data.error || 'Failed to queue CSV batch.', 'error');
+        }
+      } catch (err) {
+        showNotification('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send Test Message (BullMQ Queued)`;
+      }
+    }
+
+    // Queue Management
+    async function fetchQueueTasks() {
+      try {
+        const response = await fetch('/api/v1/queue/tasks', {
+          headers: { 'x-api-key': currentApiKey }
+        });
+        const data = await response.json();
+        const tbody = document.getElementById('queueTasksBody');
+        if (!tbody) return;
+
+        if (data.success && data.tasks.length > 0) {
+          tbody.innerHTML = data.tasks.map(t => `
+            <tr class="text-slate-700 hover:bg-slate-50 transition border-b border-slate-100 last:border-0">
+              <td class="py-3 px-2 font-mono text-[11px] font-semibold text-slate-900">#${t.id}</td>
+              <td class="py-3 px-2">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold capitalize tracking-wide ${
+                  t.status === 'failed' ? 'bg-rose-50 border border-rose-200 text-rose-700' :
+                  t.status === 'active' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700 animate-pulse' :
+                  'bg-amber-50 border border-amber-200 text-amber-700'
+                }">
+                  <span class="w-1.5 h-1.5 rounded-full ${
+                    t.status === 'failed' ? 'bg-rose-500' :
+                    t.status === 'active' ? 'bg-emerald-500' :
+                    'bg-amber-500'
+                  }"></span>
+                  ${t.status}
+                </span>
+              </td>
+              <td class="py-3 px-2 font-mono text-[11px] text-slate-600">${t.data.to}</td>
+              <td class="py-3 px-2 space-x-2">
+                <button onclick="manageJob('${t.id}', 'pause')" class="text-[11px] font-mono font-bold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg hover:bg-slate-200 cursor-pointer transition">Pause</button>
+                <button onclick="manageJob('${t.id}', 'cancel')" class="text-[11px] font-mono font-bold bg-rose-50 text-rose-600 px-2.5 py-1 rounded-lg hover:bg-rose-100 cursor-pointer transition">Cancel</button>
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="4" class="py-4 text-center text-slate-400 font-mono">No active queue tasks.</td></tr>';
+        }
+      } catch (err) {
+        console.error('Failed to fetch queue tasks', err);
+      }
+    }
+
+    async function manageJob(jobId, action) {
+      if (!confirm(`Are you sure you want to ${action} job ${jobId}?`)) return;
+      try {
+        const response = await fetch(`/api/v1/queue/tasks/${jobId}/${action}`, {
+          method: 'POST',
+          headers: { 'x-api-key': currentApiKey }
+        });
+        if (response.ok) {
+          showNotification(`Job ${jobId} ${action}ed successfully.`, 'success');
+          fetchQueueTasks();
+        } else {
+          showNotification(`Failed to ${action} job.`, 'error');
+        }
+      } catch (err) {
+        showNotification(`Error: ${err.message}`, 'error');
+      }
+    }
+
+    async function fetchInbox() {
+      try {
+        const response = await fetch(`/api/v1/messages/inbox?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const data = await response.json();
+        const container = document.getElementById('inboxList');
+        if (!container) return;
+
+        if (data.success && data.inbox.length > 0) {
+          container.innerHTML = data.inbox.map(msg => `
+            <div class="bg-white border border-slate-200 rounded-2xl p-4 flex gap-4 hover:shadow-md transition group shadow-xs">
+              <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold shrink-0">
+                ${msg.pushName ? msg.pushName.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <div class="flex-1 space-y-1 overflow-hidden">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-900">${msg.pushName || 'Unknown User'}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">${new Date(msg.timestamp * 1000).toLocaleString()}</span>
+                </div>
+                <div class="text-[11px] font-mono text-slate-500 truncate">${msg.remoteJid}</div>
+                <p class="text-xs text-slate-700 break-words pt-1">${msg.text || '<i class="text-slate-400">Media or unsupported message</i>'}</p>
+              </div>
+              <div class="opacity-0 group-hover:opacity-100 transition shrink-0">
+                <button onclick="replyTo('${msg.remoteJid.split('@')[0]}')" class="bg-slate-900 text-white p-2 rounded-xl hover:bg-slate-800 transition cursor-pointer" title="Reply">
+                  <i class="fa-solid fa-reply"></i>
+                </button>
+              </div>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-12 text-slate-400 space-y-3">
+              <i class="fa-solid fa-comments text-4xl opacity-20"></i>
+              <p class="text-xs">No incoming messages received yet.</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        console.error('Failed to fetch inbox', err);
+      }
+    }
+
+    function replyTo(phone) {
+      document.getElementById('testRecipientInput').value = phone;
+      switchSection('tester');
+    }
+
+    // Initialize Polling
+    setInterval(fetchQueueTasks, 5000);
+    setInterval(fetchInbox, 10000);
+    fetchQueueTasks();
+    fetchInbox();
+
+    async function sendTestMessage(e) {
+      e.preventDefault();
+      const recipient = document.getElementById('testRecipientInput').value.trim();
+      const text = document.getElementById('testMessageInput').value.trim();
+
+      // If CSV recipients are loaded and single recipient input is empty, queue the CSV batch
+      if (!recipient && parsedCsvRecipients.length > 0) {
+        await queueCsvBatch();
+        return;
+      }
+
+      if (!recipient) {
+        showNotification('Enter a recipient phone number or upload a CSV file.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('sendMsgBtn');
+      const responseBox = document.getElementById('testResponseBox');
+      const responseJson = document.getElementById('testResponseJson');
+      const responseStatus = document.getElementById('testResponseStatus');
+
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Queueing via BullMQ...`;
+      responseBox.classList.add('hidden');
+
+      try {
+        const response = await fetch('/api/v1/messages/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
+          body: JSON.stringify({ to: recipient, text: text })
+        });
+
+        const data = await response.json();
+        responseBox.classList.remove('hidden');
+        responseJson.innerText = JSON.stringify(data, null, 2);
+
+        if (response.ok && data.success) {
+          responseStatus.className = 'text-emerald-600 font-bold';
+          responseStatus.innerText = '202 ACCEPTED';
+          showNotification('Message accepted & queued via BullMQ (1 msg / 6s drip-feed)!', 'success');
+        } else {
+          responseStatus.className = 'text-rose-600 font-bold';
+          responseStatus.innerText = response.status + ' ERROR';
+          showNotification(data.error || 'Failed to queue message.', 'error');
+        }
+      } catch (err) {
+        showNotification('Network error: ' + err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Send Test Message (BullMQ Queued)`;
+      }
+    }
+
+    async function saveWebhookConfig(e) {
+      e.preventDefault();
+      const webhookUrl = document.getElementById('webhookUrlInput').value.trim();
+
+      try {
+        const response = await fetch('/api/v1/webhook/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
+          body: JSON.stringify({ webhookUrl })
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          showNotification('Webhook URL registered successfully!', 'success');
+        } else {
+          showNotification(data.error || 'Failed to configure webhook.', 'error');
+        }
+      } catch (err) {
+        showNotification('Network error: ' + err.message, 'error');
+      }
+    }
+
+    async function testWebhook() {
+      try {
+        const response = await fetch('/api/v1/webhook/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey }
+        });
+        const data = await response.json();
+        if (response.ok) {
+          showNotification('Webhook test ping sent successfully!', 'success');
+          fetchWebhookLogs();
+        } else {
+          showNotification('Webhook test failed.', 'error');
+        }
+      } catch (err) {
+        showNotification('Network error: ' + err.message, 'error');
+      }
+    }
+
+    async function fetchWebhookLogs() {
+      try {
+        const response = await fetch(`/api/v1/webhook/logs?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const data = await response.json();
+        const container = document.getElementById('webhookLogsContainer');
+
+        if (data.success && data.logs && data.logs.length > 0) {
+          container.innerHTML = data.logs.map(log => `
+            <div class="py-1.5 border-b border-slate-100 flex items-center justify-between">
+              <span class="text-slate-700">[${new Date(log.timestamp).toLocaleTimeString()}] ${log.event || 'message.upsert'}</span>
+              <span class="${log.status === 200 || log.status === 202 ? 'text-emerald-600' : 'text-rose-600'} font-bold">HTTP ${log.status || 'OK'}</span>
+            </div>
+          `).join('');
+        } else {
+          container.innerHTML = `<span class="text-slate-400 italic">No webhook delivery events logged yet.</span>`;
+        }
+      } catch (err) {}
+    }
+
+    function switchTab(lang) {
+      selectedLanguage = lang;
+      document.querySelectorAll('.snippet-tab').forEach(el => {
+        el.className = 'snippet-tab px-3.5 py-1.5 text-xs font-mono rounded-xl transition text-slate-600 hover:text-slate-900';
+      });
+      const activeEl = document.getElementById(`tab-${lang}`);
+      if (activeEl) {
+        activeEl.className = 'snippet-tab px-3.5 py-1.5 text-xs font-mono rounded-xl transition text-white bg-slate-900 font-bold shadow-sm';
+      }
+      renderSnippet();
+    }
+
+    function renderSnippet() {
+      const display = document.getElementById('snippetDisplay');
+      const key = currentApiKey || 'YOUR_API_KEY';
+
+      if (selectedLanguage === 'curl') {
+        display.innerText = `curl -X POST "${baseUrl}/api/v1/messages/send" \\
+  -H "Content-Type: application/json" \\
+  -H "x-api-key: ${key}" \\
+  -d '{
+    "to": "2348000000000",
+    "text": "Your verification code is 849201."
+  }'`;
+      } else if (selectedLanguage === 'javascript') {
+        display.innerText = `const response = await fetch('${baseUrl}/api/v1/messages/send', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': '${key}'
+  },
+  body: JSON.stringify({
+    to: '2348000000000',
+    text: 'Your verification code is 849201.'
+  })
+});
+const data = await response.json();
+console.log(data);`;
+      } else if (selectedLanguage === 'php') {
+        display.innerText = `<?php
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, "${baseUrl}/api/v1/messages/send");
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    "Content-Type: application/json",
+    "x-api-key: ${key}"
+]);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+    "to" => "2348000000000",
+    "text" => "Your verification code is 849201."
+]));
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;
+?>`;
+      } else if (selectedLanguage === 'pm2') {
+        display.innerText = `// ecosystem.config.js (PM2 Multi-Core Cluster Mode for Oracle Cloud ARM / VPS)
+module.exports = {
+  apps: [
+    {
+      name: 'whatsapp-api-gateway',
+      script: './src/server.js',
+      instances: 'max',      // Scale across all available CPU cores
+      exec_mode: 'cluster',  // Automatic PM2 cluster load-balancing
+      watch: false,
+      max_memory_restart: '1G',
+      env: {
+        NODE_ENV: 'development',
+        PORT: 3000
+      },
+      env_production: {
+        NODE_ENV: 'production',
+        PORT: 3000
+      }
+    }
+  ]
+};`;
+      }
+    }
+
+    function copySnippet() {
+      const text = document.getElementById('snippetDisplay').innerText;
+      navigator.clipboard.writeText(text);
+      const btnText = document.getElementById('copySnippetText');
+      const btnIcon = document.getElementById('copySnippetIcon');
+      btnText.innerText = 'Copied!';
+      btnIcon.className = 'fa-solid fa-check text-emerald-400';
+      setTimeout(() => {
+        btnText.innerText = 'Copy';
+        btnIcon.className = 'fa-regular fa-copy';
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{
+  "name": "WhatsApp API Gateway & Developer Portal",
+  "description": "Multi-Tenant WhatsApp REST API Gateway with automated session QR auth, anti-ban message queues, webhooks, and live management dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
