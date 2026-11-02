@@ -575,23 +575,39 @@
       : window.location.origin;
 
     document.addEventListener('DOMContentLoaded', async () => {
-      // Auto-authenticate default user session so switching to preview or refreshing never shows sign-in screen
-      if (!userAuthToken) {
-        userAuthToken = 'token_adebayovictor342_auto';
-        localStorage.setItem('wa_user_token', userAuthToken);
+      if (userAuthToken) {
+        // Verify token with server
+        try {
+          const response = await fetch(baseUrl + '/api/v1/auth/me', {
+            headers: { 'x-auth-token': userAuthToken }
+          });
+          const data = await response.json();
+          if (data.success) {
+            currentUser = data.user;
+            // Ensure we use the correct API key for this user
+            currentApiKey = 'wak_' + currentUser.userId;
+            currentSessionId = currentApiKey;
+            localStorage.setItem('wa_api_key', currentApiKey);
+            localStorage.setItem('wa_session_id', currentSessionId);
+            
+            hideAuthScreen();
+            initDashboard();
+            return;
+          }
+        } catch (e) {
+          console.warn('Auth verification failed', e);
+        }
       }
-      currentUser = {
-        userId: 'adebayovictor342',
-        email: 'adebayovictor342@gmail.com'
-      };
-      if (!currentApiKey) {
-        currentApiKey = 'wak_adebayovictor342';
-        currentSessionId = currentApiKey;
-        localStorage.setItem('wa_api_key', currentApiKey);
-        localStorage.setItem('wa_session_id', currentSessionId);
-      }
-      hideAuthScreen();
-      initDashboard();
+      
+      // If no valid session, purge everything and show auth screen
+      userAuthToken = '';
+      currentApiKey = '';
+      currentSessionId = '';
+      currentUser = null;
+      localStorage.removeItem('wa_user_token');
+      localStorage.removeItem('wa_api_key');
+      localStorage.removeItem('wa_session_id');
+      showAuthScreen();
     });
 
     function switchAuthTab(mode) {
@@ -624,7 +640,7 @@
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Processing...`;
 
-      const endpoint = authMode === 'signup' ? '/api/v1/auth/signup' : '/api/v1/auth/signin';
+      const endpoint = authMode === 'signup' ? baseUrl + '/api/v1/auth/signup' : baseUrl + '/api/v1/auth/signin';
 
       try {
         const response = await fetch(endpoint, {
@@ -664,7 +680,7 @@
 
     async function verifyAuthToken() {
       try {
-        const response = await fetch('/api/v1/auth/me', {
+        const response = await fetch(baseUrl + '/api/v1/auth/me', {
           headers: { 'x-auth-token': userAuthToken }
         });
         const data = await response.json();
@@ -700,7 +716,11 @@
 
     function handleSignOut() {
       localStorage.removeItem('wa_user_token');
+      localStorage.removeItem('wa_api_key');
+      localStorage.removeItem('wa_session_id');
       userAuthToken = '';
+      currentApiKey = '';
+      currentSessionId = '';
       currentUser = null;
       if (statusPollInterval) clearInterval(statusPollInterval);
       showAuthScreen();
@@ -761,7 +781,7 @@
       }
 
       try {
-        const response = await fetch(`/api/v1/messages/history?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const response = await fetch(baseUrl + `/api/v1/messages/history?apiKey=${encodeURIComponent(currentApiKey)}`);
         const data = await response.json();
         if (data.success && data.history) {
           data.history.forEach(msg => {
@@ -988,7 +1008,7 @@
 
       try {
         // First check if Baileys already rotated the QR code on the open socket without dropping the handshake
-        const statusRes = await fetch(`/api/v1/session/status?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const statusRes = await fetch(baseUrl + `/api/v1/session/status?apiKey=${encodeURIComponent(currentApiKey)}`);
         const statusData = await statusRes.json();
         if (statusData.success && statusData.status === 'CONNECTED') {
           hideQrAndShowConnected(statusData.user);
@@ -1002,7 +1022,7 @@
         }
 
         // Otherwise request a fresh QR code session
-        const response = await fetch('/api/v1/session/start', {
+        const response = await fetch(baseUrl + '/api/v1/session/start', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1051,7 +1071,7 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Requesting...`;
 
       try {
-        const response = await fetch('/api/v1/session/pairing-code', {
+        const response = await fetch(baseUrl + '/api/v1/session/pairing-code', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1087,7 +1107,7 @@
       }
 
       try {
-        const response = await fetch('/api/v1/session/sandbox', {
+        const response = await fetch(baseUrl + '/api/v1/session/sandbox', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1126,7 +1146,7 @@
       btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Starting...`;
 
       try {
-        const response = await fetch('/api/v1/session/start', {
+        const response = await fetch(baseUrl + '/api/v1/session/start', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1190,7 +1210,7 @@
       if (indicator) indicator.classList.remove('hidden');
 
       try {
-        const response = await fetch(`/api/v1/session/status?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const response = await fetch(baseUrl + `/api/v1/session/status?apiKey=${encodeURIComponent(currentApiKey)}`);
         const data = await response.json();
 
         if (data.success) {
@@ -1292,16 +1312,24 @@
         btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Disconnecting...`;
       }
       try {
-        const response = await fetch('/api/v1/session/logout', {
+        const response = await fetch(baseUrl + '/api/v1/session/logout', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
           body: JSON.stringify({ apiKey: currentApiKey, sessionId: currentSessionId || currentApiKey })
         });
-        const data = await response.json();
+        
+        let msg = 'Session disconnected and logged out.';
+        try {
+          const data = await response.json();
+          if (data.message) msg = data.message;
+        } catch (e) {
+          // Handle empty or non-json response
+        }
+
         const img = document.getElementById('qrCodeImg');
         if (img) img.src = '';
         updateStatusUI('DISCONNECTED', null);
-        showNotification(data.message || 'Session disconnected and logged out.', 'info');
+        showNotification(msg, 'info');
       } catch (err) {
         showNotification('Error logging out: ' + err.message, 'error');
       } finally {
@@ -1446,7 +1474,7 @@
       responseBox.classList.add('hidden');
 
       try {
-        const response = await fetch('/api/v1/messages/send-bulk', {
+        const response = await fetch(baseUrl + '/api/v1/messages/send-bulk', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
           body: JSON.stringify({
@@ -1482,7 +1510,7 @@
     // Queue Management
     async function fetchQueueTasks() {
       try {
-        const response = await fetch('/api/v1/queue/tasks', {
+        const response = await fetch(baseUrl + '/api/v1/queue/tasks', {
           headers: { 'x-api-key': currentApiKey }
         });
         const data = await response.json();
@@ -1525,7 +1553,7 @@
     async function manageJob(jobId, action) {
       if (!confirm(`Are you sure you want to ${action} job ${jobId}?`)) return;
       try {
-        const response = await fetch(`/api/v1/queue/tasks/${jobId}/${action}`, {
+        const response = await fetch(baseUrl + `/api/v1/queue/tasks/${jobId}/${action}`, {
           method: 'POST',
           headers: { 'x-api-key': currentApiKey }
         });
@@ -1542,7 +1570,7 @@
 
     async function fetchInbox() {
       try {
-        const response = await fetch(`/api/v1/messages/inbox?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const response = await fetch(baseUrl + `/api/v1/messages/inbox?apiKey=${encodeURIComponent(currentApiKey)}`);
         const data = await response.json();
         const container = document.getElementById('inboxList');
         if (!container) return;
@@ -1618,7 +1646,7 @@
       responseBox.classList.add('hidden');
 
       try {
-        const response = await fetch('/api/v1/messages/send', {
+        const response = await fetch(baseUrl + '/api/v1/messages/send', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
           body: JSON.stringify({ to: recipient, text: text })
@@ -1650,7 +1678,7 @@
       const webhookUrl = document.getElementById('webhookUrlInput').value.trim();
 
       try {
-        const response = await fetch('/api/v1/webhook/config', {
+        const response = await fetch(baseUrl + '/api/v1/webhook/config', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey },
           body: JSON.stringify({ webhookUrl })
@@ -1668,7 +1696,7 @@
 
     async function testWebhook() {
       try {
-        const response = await fetch('/api/v1/webhook/test', {
+        const response = await fetch(baseUrl + '/api/v1/webhook/test', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-api-key': currentApiKey }
         });
@@ -1686,7 +1714,7 @@
 
     async function fetchWebhookLogs() {
       try {
-        const response = await fetch(`/api/v1/webhook/logs?apiKey=${encodeURIComponent(currentApiKey)}`);
+        const response = await fetch(baseUrl + `/api/v1/webhook/logs?apiKey=${encodeURIComponent(currentApiKey)}`);
         const data = await response.json();
         const container = document.getElementById('webhookLogsContainer');
 
