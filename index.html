@@ -1716,9 +1716,12 @@
     function renderSnippet() {
       const display = document.getElementById('snippetDisplay');
       const key = currentApiKey || 'YOUR_API_KEY';
+      // Prioritize the real production URL for examples if provided by the user
+      const productionUrl = 'https://fast-odds-backend.onrender.com';
+      const exampleBaseUrl = (baseUrl.includes('localhost') || baseUrl.includes('europe-west2.run.app')) ? productionUrl : baseUrl;
 
       if (selectedLanguage === 'curl') {
-        display.innerText = `curl -X POST "${baseUrl}/api/v1/messages/send" \\
+        display.innerText = `curl -X POST "${exampleBaseUrl}/api/v1/messages/send" \\
   -H "Content-Type: application/json" \\
   -H "x-api-key: ${key}" \\
   -d '{
@@ -1726,7 +1729,7 @@
     "text": "Your verification code is 849201."
   }'`;
       } else if (selectedLanguage === 'javascript') {
-        display.innerText = `const response = await fetch('${baseUrl}/api/v1/messages/send', {
+        display.innerText = `const response = await fetch('${exampleBaseUrl}/api/v1/messages/send', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -1742,7 +1745,7 @@ console.log(data);`;
       } else if (selectedLanguage === 'php') {
         display.innerText = `<?php
 $ch = curl_init();
-curl_setopt($ch, CURLOPT_URL, "${baseUrl}/api/v1/messages/send");
+curl_setopt($ch, CURLOPT_URL, "${exampleBaseUrl}/api/v1/messages/send");
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_HTTPHEADER, [

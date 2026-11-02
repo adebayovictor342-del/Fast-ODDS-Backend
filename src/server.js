@@ -38,8 +38,8 @@ async function startServer() {
     next();
   });
 
-  // Root Health-Check Route
-  app.get('/', (req, res) => {
+  // Backend Health-Check Route (Moved to /api/health to allow frontend at /)
+  app.get('/api/health', (req, res) => {
     res.status(200).send('Fast Odd Backend is active!');
   });
 
